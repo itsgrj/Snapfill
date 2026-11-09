@@ -1,0 +1,28 @@
+name: Check
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Manifest is valid JSON
+        run: node -e "JSON.parse(require('fs').readFileSync('extension/manifest.json','utf8'))"
+      - name: Scripts parse
+        run: for f in extension/src/*.js extension/popup/*.js; do node --check "$f"; done
+      - name: Every file the manifest names exists
+        run: |
+          node -e "
+          const fs = require('fs');
+          const m = JSON.parse(fs.readFileSync('extension/manifest.json', 'utf8'));
+          const files = [m.background.service_worker, m.action.default_popup,
+            ...m.content_scripts.flatMap(c => c.js), ...Object.values(m.icons)];
+          const missing = files.filter(f => !fs.existsSync('extension/' + f));
+          if (missing.length) { console.error('Missing:', missing); process.exit(1); }
+          console.log('All', files.length, 'files present');"

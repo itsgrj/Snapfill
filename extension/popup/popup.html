@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Snapfill</title>
+<link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header class="head">
+    <img src="../icons/icon48.png" alt="" width="28" height="28">
+    <div class="t"><span>Snapfill</span><span class="muted" id="host">This page</span></div>
+  </header>
+
+  <section class="sec" id="site-sec">
+    <div class="row"><span class="grow">Fill on this site</span><button class="sw" type="button" role="switch" id="pause" aria-checked="true" aria-label="Fill on this site"></button></div>
+    <div id="site-on">
+      <span class="muted small">Profile on this site</span>
+      <div class="seg" role="group" aria-label="Profile on this site" id="site-prof"></div>
+      <div class="row gap"><button class="btn primary" type="button" id="fill">Fill this page</button><span class="muted small">or press Alt+Shift+F</span></div>
+    </div>
+    <p class="muted small" id="site-off" hidden>Paused. Fields on this site stay empty.</p>
+  </section>
+
+  <div class="setup" id="setup" hidden>Tell Snapfill about you once below. Or just fill forms as usual and it learns as you type.</div>
+
+  <nav class="tabs" role="tablist" aria-label="Profiles">
+    <button role="tab" type="button" data-tab="about" aria-selected="true">About you</button>
+    <button role="tab" type="button" data-tab="work" aria-selected="false">Work</button>
+    <button role="tab" type="button" data-tab="personal" aria-selected="false">Personal</button>
+    <button role="tab" type="button" data-tab="learned" aria-selected="false">Learned</button>
+  </nav>
+  <section class="panel" id="panel"></section>
+
+  <footer class="foot">
+    <label for="def">New sites use</label>
+    <select id="def"><option value="work">Work</option><option value="personal">Personal</option><option value="dummy">Dummy</option></select>
+    <span class="grow"></span>
+    <span class="muted small" id="saved" aria-live="polite"></span>
+  </footer>
+
+  <script src="../src/shared.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

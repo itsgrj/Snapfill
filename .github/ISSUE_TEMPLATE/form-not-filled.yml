@@ -1,0 +1,33 @@
+name: Form not filled right
+description: Snapfill filled a field wrongly, or skipped one it should know
+labels: [matching]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks. Please never paste your real details here; describe them instead.
+  - type: input
+    id: page
+    attributes:
+      label: Page
+      description: The form's address, if it is public.
+      placeholder: https://example.com/register
+  - type: input
+    id: label
+    attributes:
+      label: Field label
+      description: The text next to the field, as the page shows it.
+      placeholder: Business email
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what should have
+      placeholder: It put my phone number here. It should have been my work email.
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and version
+      placeholder: Chrome 131, Dia, Edge 131

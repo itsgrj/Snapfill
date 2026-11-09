@@ -1,0 +1,22 @@
+name: Bug
+description: Something in Snapfill doesn't work as it should
+labels: [bug]
+body:
+  - type: textarea
+    id: steps
+    attributes:
+      label: What you did
+      placeholder: Opened the popup, switched this site to Personal, clicked the first field.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected, and what happened
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and version
+      placeholder: Chrome 131, Dia, Edge 131
