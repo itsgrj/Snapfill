@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.1
+
+- The "Remembered" message now shows the Snapfill icon instead of a plain symbol.
+
 ## 1.0.0
 
 The first public release.
