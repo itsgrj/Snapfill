@@ -40,6 +40,25 @@ var SF = (function () {
     if (!d.profiles.personal) d.profiles.personal = {};
     return d;
   }
+  /* ---------- ignored sites ---------- */
+  function siteKey(h) { return String(h || "").toLowerCase().replace(/^www\./, ""); }
+  function cleanSite(v) {
+    return siteKey(String(v || "").trim().replace(/^[a-z]+:\/\//i, "").split(/[\/?#\s:]/)[0]);
+  }
+  function validSite(d) { return /^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(d) || d === "localhost"; }
+  // Returns the ignored entry that covers this host, or null.
+  function ignoredBy(d, h) {
+    var k = siteKey(h), list = d.paused || {}, best = null;
+    Object.keys(list).forEach(function (key) {
+      var e = list[key]; if (!e) return;
+      var kk = siteKey(key), sub = e === true ? false : !!e.sub;
+      if (kk === k || (sub && k.slice(-(kk.length + 1)) === "." + kk)) {
+        if (!best || kk === k) best = key;
+      }
+    });
+    return best;
+  }
+
   function load() {
     return new Promise(function (res) { chrome.storage.local.get(STORE_KEY, function (r) { res(normalize(r && r[STORE_KEY])); }); });
   }
@@ -226,6 +245,7 @@ var SF = (function () {
   return {
     STORE_KEY: STORE_KEY, FIELDS: FIELDS, FIELD: FIELD, PROFILES: PROFILES, PNAME: PNAME,
     load: load, save: save, normalize: normalize, defaults: defaults,
+    siteKey: siteKey, cleanSite: cleanSite, validSite: validSite, ignoredBy: ignoredBy,
     clean: clean, tokens: tokens, labelText: labelText, eligible: eligible, isSensitive: isSensitive, classify: classify, learnable: learnable,
     findCustom: findCustom, value: value, customValue: customValue, makeDummy: makeDummy, formatDate: formatDate
   };

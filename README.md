@@ -88,7 +88,8 @@ nothing.
 
 ### And the small things
 
-- **Pause any site.** One switch in the toolbar popup, and that site never fills again.
+- **Ignore any site.** Turn off one switch in the toolbar popup, or list sites under **Ignored**.
+  One entry can cover a whole domain, so `mybank.com` also covers `netbanking.mybank.com`.
 - **Fill again on demand.** Press <kbd>Alt</kbd> <kbd>Shift</kbd> <kbd>F</kbd> on any form.
 - **Never touches secrets.** Passwords, card numbers, one time codes, PAN, Aadhaar and passport numbers are skipped every time.
 - **Leaves sign-in boxes alone.** An email and a password is a sign-in, and your password manager handles that.

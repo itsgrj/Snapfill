@@ -19,10 +19,11 @@
 
   /* site section */
   function renderSite() {
-    var paused = !!data.paused[host], cur = data.sites[host] || data.def;
+    var by = host ? SF.ignoredBy(data, host) : null, paused = !!by, cur = data.sites[host] || data.def;
     $("host").textContent = host || "This page";
     $("pause").setAttribute("aria-checked", String(!paused));
     $("site-on").hidden = paused; $("site-off").hidden = !paused;
+    $("site-off").textContent = by && SF.siteKey(by) !== SF.siteKey(host) ? "Ignored, along with every " + SF.siteKey(by) + " site. Fields here stay empty." : "Ignored. Fields on this site stay empty.";
     $("site-prof").innerHTML = SF.PROFILES.map(function (p) { return '<button type="button" data-p="' + p + '" aria-pressed="' + (p === cur) + '">' + SF.PNAME[p] + "</button>"; }).join("");
     $("def").value = data.def;
     $("setup").hidden = !isEmpty();
@@ -45,6 +46,7 @@
     var h = "";
     if (tab === "about") h = '<p class="hint">Used by both Work and Personal.</p>' + rows(ABOUT, "shared");
     else if (tab === "work" || tab === "personal") h = '<p class="hint">Only used when filling as ' + SF.PNAME[tab] + ".</p>" + rows(OWN, tab);
+    else if (tab === "ignored") h = ignoredPanel();
     else {
       var ids = Object.keys(data.custom);
       if (!ids.length) h = '<p class="hint">Nothing learned yet. When you type something on a form that is not saved here, it shows up in this list.</p>';
@@ -58,10 +60,31 @@
     $("panel").innerHTML = h;
   }
 
+  function ignoredPanel() {
+    var keys = Object.keys(data.paused).filter(function (k) { return data.paused[k]; }).sort(function (a, b) {
+      var ea = data.paused[a], eb = data.paused[b];
+      return ((eb && eb.at) || "").localeCompare((ea && ea.at) || "") || a.localeCompare(b);
+    });
+    var list = keys.length ? keys.map(function (k) {
+      var e = data.paused[k] === true ? {} : data.paused[k], d = SF.siteKey(k);
+      var note = (e.sub ? "And every subdomain. " : "") + (e.how === "added" ? "Added by you" : "Turned off from this site");
+      return '<div class="site"><span class="fav">' + esc(d.charAt(0)) + '</span><div class="t"><span class="d">' + esc(d) + '</span><span class="muted small">' + esc(note) + '</span></div>' +
+        '<button class="x" type="button" data-unignore="' + esc(k) + '" aria-label="Stop ignoring ' + esc(d) + '">&#215;</button></div>';
+    }).join("") : '<p class="hint">No ignored sites. Snapfill fills everywhere you click.</p>';
+    return '<form class="row" id="ig-form" novalidate><input class="ig-in grow" id="ig-in" placeholder="Add a site, like mybank.com" aria-label="Site to ignore" aria-describedby="ig-err" autocomplete="off" spellcheck="false">' +
+      '<button class="btn primary" type="submit">Ignore</button></form>' +
+      '<p class="err" id="ig-err" hidden>Type a site like mybank.com</p>' +
+      '<label class="chk"><input type="checkbox" id="ig-sub"' + (subPref ? " checked" : "") + '> Include every subdomain, like mail. and app.</label>' +
+      '<div class="sites">' + list + "</div>" +
+      (keys.length ? '<p class="muted small count">' + keys.length + " site" + (keys.length === 1 ? "" : "s") + " ignored</p>" : "");
+  }
+  var subPref = true;
+
   /* events */
   document.querySelector(".tabs").addEventListener("click", function (e) { var b = e.target.closest("button"); if (!b) return; tab = b.getAttribute("data-tab"); renderPanel(); });
   $("panel").addEventListener("input", function (e) {
     var t = e.target;
+    if (t.id === "ig-in") { $("ig-err").hidden = true; t.removeAttribute("aria-invalid"); return; }
     if (t.hasAttribute("data-key")) {
       var k = t.getAttribute("data-key"), s = t.getAttribute("data-scope"), v = t.value.trim();
       if (s === "shared") { if (v) data.shared[k] = v; else delete data.shared[k]; }
@@ -71,13 +94,27 @@
     }
     persist(); $("setup").hidden = !isEmpty();
   });
+  $("panel").addEventListener("submit", function (e) {
+    if (e.target.id !== "ig-form") return;
+    e.preventDefault();
+    var d = SF.cleanSite($("ig-in").value);
+    if (!SF.validSite(d)) { $("ig-err").hidden = false; $("ig-in").setAttribute("aria-invalid", "true"); $("ig-in").focus(); return; }
+    var old = Object.keys(data.paused).filter(function (k) { return SF.siteKey(k) === d; });
+    old.forEach(function (k) { delete data.paused[k]; });
+    data.paused[d] = { sub: $("ig-sub").checked, how: "added", at: new Date().toISOString() };
+    persist(); renderPanel(); renderSite(); $("ig-in").focus();
+  });
+  $("panel").addEventListener("change", function (e) { if (e.target.id === "ig-sub") subPref = e.target.checked; });
   $("panel").addEventListener("click", function (e) {
+    var u = e.target.closest("[data-unignore]");
+    if (u) { delete data.paused[u.getAttribute("data-unignore")]; persist(); renderPanel(); renderSite(); return; }
     var b = e.target.closest("[data-del]"); if (!b) return;
     delete data.custom[b.getAttribute("data-del")]; persist(); renderPanel();
   });
   $("pause").addEventListener("click", function () {
-    if (data.paused[host]) delete data.paused[host]; else data.paused[host] = true;
-    persist(); renderSite();
+    var by = SF.ignoredBy(data, host);
+    if (by) delete data.paused[by]; else data.paused[SF.siteKey(host)] = { sub: false, how: "switch", at: new Date().toISOString() };
+    persist(); renderSite(); if (tab === "ignored") renderPanel();
   });
   $("site-prof").addEventListener("click", function (e) {
     var b = e.target.closest("button"); if (!b) return;

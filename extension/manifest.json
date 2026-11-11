@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Snapfill",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Click the first field of any form and everything you have told it fills in. Work, Personal, and Dummy profiles.",
   "icons": { "16": "icons/icon16.png", "32": "icons/icon32.png", "48": "icons/icon48.png", "128": "icons/icon128.png" },
   "action": {

@@ -8,7 +8,7 @@ what happens to them.
 - The details you type into its popup: name, date of birth, address, email, phone, company and
   job title, for each profile.
 - Fields it learns from forms you fill by hand, with the site you typed them on and the date.
-- Which profile each site uses, and which sites you paused.
+- Which profile each site uses, and which sites you told it to ignore.
 
 ## Where it keeps them
 

@@ -15,7 +15,7 @@
   var handled = new WeakSet(); // roots already filled on first click
   var mine = new WeakMap();    // element -> value we set
 
-  function paused() { return !!data.paused[host]; }
+  function paused() { return !!SF.ignoredBy(data, host); }
   function siteProfile() { return data.sites[host] || data.def || "work"; }
   function persist() { return SF.save(data); }
 

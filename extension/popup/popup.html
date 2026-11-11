@@ -18,16 +18,17 @@
       <div class="seg" role="group" aria-label="Profile on this site" id="site-prof"></div>
       <div class="row gap"><button class="btn primary" type="button" id="fill">Fill this page</button><span class="muted small">or press Alt+Shift+F</span></div>
     </div>
-    <p class="muted small" id="site-off" hidden>Paused. Fields on this site stay empty.</p>
+    <p class="muted small" id="site-off" hidden>Ignored. Fields on this site stay empty.</p>
   </section>
 
   <div class="setup" id="setup" hidden>Tell Snapfill about you once below. Or just fill forms as usual and it learns as you type.</div>
 
-  <nav class="tabs" role="tablist" aria-label="Profiles">
+  <nav class="tabs" role="tablist" aria-label="Snapfill sections">
     <button role="tab" type="button" data-tab="about" aria-selected="true">About you</button>
     <button role="tab" type="button" data-tab="work" aria-selected="false">Work</button>
     <button role="tab" type="button" data-tab="personal" aria-selected="false">Personal</button>
     <button role="tab" type="button" data-tab="learned" aria-selected="false">Learned</button>
+    <button role="tab" type="button" data-tab="ignored" aria-selected="false">Ignored</button>
   </nav>
   <section class="panel" id="panel"></section>
 
