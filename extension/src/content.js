@@ -37,7 +37,7 @@
     return fieldsIn(root).map(function (el) {
       var key = SF.classify(el), v = "", label = SF.labelText(el) || (SF.FIELD[key] ? SF.FIELD[key].label : "This field"), custom = null;
       if (key) v = SF.value(data, key, p, dummy);
-      if (!v && !key) { custom = SF.findCustom(data, label); if (custom) v = SF.customValue(data, custom, p); }
+      if (!v && !key) { custom = SF.findCustom(data, label, p); if (custom) v = SF.customValue(data, custom, p); }
       if (v && key === "dob") v = SF.formatDate(v, el);
       return { el: el, key: key, custom: custom, label: label, val: v };
     });
@@ -129,7 +129,7 @@
   function triggers(el, p) {
     if (/search/i.test(SF.labelText(el) + " " + (el.getAttribute("name") || "") + " " + (el.getAttribute("role") || ""))) return false;
     if (SF.classify(el)) return true;
-    if (p !== "dummy" && SF.findCustom(data, SF.labelText(el))) return true;
+    if (p !== "dummy" && SF.findCustom(data, SF.labelText(el), p)) return true;
     return !!el.form;
   }
   document.addEventListener("focusin", function (e) {
@@ -163,18 +163,33 @@
       if (fieldsIn(root).length < 2) return;
       var p = (sessions.get(root) || {}).p || siteProfile();
       if (p === "dummy") return;
-      var key = SF.classify(el), label = SF.labelText(el), saved = null;
+      var key = SF.classify(el), label = SF.labelText(el), saved = null, now = new Date().toISOString();
+      // Something Snapfill already holds is never saved again, and nothing it holds is ever replaced.
+      if (SF.known(data, v)) return;
       if (key) {
         if (SF.value(data, key, p)) return;
+        var kept = Object.keys(data.custom).some(function (id) { return data.custom[id].key === key; });
         if (SF.FIELD[key].scope === "own") { data.profiles[p][key] = v; saved = { kind: "own", key: key, p: p, label: SF.FIELD[key].label }; }
+        else if (kept) {
+          // Kept to the other profile: save this one to the current profile only, so the other keeps its own.
+          var kid = "k" + key + "-" + p, kl = SF.FIELD[key].label;
+          data.custom[kid] = { label: kl, tokens: SF.tokens(kl), value: v, scope: p, key: key, from: host, at: now };
+          saved = { kind: "custom", id: kid, label: kl, scoped: true };
+        }
         else { data.shared[key] = v; saved = { kind: "shared", key: key, label: SF.FIELD[key].label }; }
       } else {
         if (!SF.learnable(el)) return;
-        var hit = SF.findCustom(data, label);
+        var hit = SF.findCustom(data, label, p);
         if (hit && SF.customValue(data, hit, p)) return;
-        var id = hit || "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-        data.custom[id] = { label: label, tokens: SF.tokens(label), value: v, scope: "shared", from: host, at: new Date().toISOString() };
-        saved = { kind: "custom", id: id, label: label };
+        var id, scope;
+        if (hit) { id = hit; scope = data.custom[hit].scope; data.custom[hit].value = v; data.custom[hit].at = now; }
+        else {
+          // The other profile already has this field: keep the new value to this profile so neither overwrites the other.
+          scope = SF.findCustom(data, label) ? p : "shared";
+          id = "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+          data.custom[id] = { label: label, tokens: SF.tokens(label), value: v, scope: scope, from: host, at: now };
+        }
+        saved = { kind: "custom", id: id, label: label, scoped: scope !== "shared" };
       }
       persist();
       mine.set(el, v);
@@ -188,13 +203,13 @@
     learnTimer = setTimeout(function () { showLearned(learnBatch); learnBatch = null; }, 250);
   }
   function scopeText(b) {
-    var allShared = b.items.every(function (s) { return s.kind !== "own"; });
+    var allShared = b.items.every(function (s) { return s.kind !== "own" && !s.scoped; });
     if (allShared) return "Saved to Work and Personal";
     return "Saved to " + SF.PNAME[b.p];
   }
   function showLearned(b) {
     var names = b.items.map(function (s) { return s.label; });
-    var canNarrow = b.items.some(function (s) { return s.kind !== "own"; });
+    var canNarrow = b.items.some(function (s) { return s.kind !== "own" && !s.scoped; });
     var acts = [];
     if (canNarrow) acts.push({ label: "Only " + SF.PNAME[b.p], act: "narrow" });
     acts.push({ label: "Undo", act: "unlearn" });
@@ -215,7 +230,7 @@
       if (s.kind === "shared") {
         var v = data.shared[s.key]; delete data.shared[s.key];
         // A shared field kept to one profile is stored as a custom item with that scope.
-        data.custom["k" + s.key] = { label: s.label, tokens: SF.tokens(s.label), value: v, scope: p, key: s.key, from: host, at: new Date().toISOString() };
+        data.custom["k" + s.key + "-" + p] = { label: s.label, tokens: SF.tokens(s.label), value: v, scope: p, key: s.key, from: host, at: new Date().toISOString() };
       } else if (s.kind === "custom" && data.custom[s.id]) data.custom[s.id].scope = p;
     });
     persist();
