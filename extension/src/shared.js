@@ -176,10 +176,13 @@ var SF = (function () {
     if (!lab || lab.length < 2) return false;
     return !IGNORE.test((lab + " " + attrText(el)).toLowerCase());
   }
-  function findCustom(d, label) {
+  // With a profile, only entries that profile can use are considered.
+  function findCustom(d, label, p) {
     var tk = tokens(label), best = null, score = 0;
     Object.keys(d.custom).forEach(function (id) {
-      var c = d.custom[id], s = similarity(tk, c.tokens);
+      var c = d.custom[id];
+      if (p && c.scope !== "shared" && c.scope !== p) return;
+      var s = similarity(tk, c.tokens);
       if (clean(c.label).toLowerCase() === clean(label).toLowerCase()) s = 1;
       if (s > score) { score = s; best = id; }
     });
@@ -211,6 +214,23 @@ var SF = (function () {
     if (p === "dummy") return "";
     if (c.scope === "shared" || c.scope === p) return c.value;
     return "";
+  }
+
+  // True when Snapfill already holds this value anywhere, so typing it again saves nothing.
+  function same(v) {
+    var s = String(v || "").toLowerCase().replace(/[^a-z0-9@]+/g, "");
+    var digits = s.replace(/[^0-9]/g, "");
+    if (digits.length >= 10 && digits.length === s.length) return digits.slice(-10);
+    return s;
+  }
+  function known(d, v) {
+    var want = same(v); if (!want) return false;
+    var pools = [d.shared || {}, (d.profiles || {}).work || {}, (d.profiles || {}).personal || {}];
+    for (var i = 0; i < pools.length; i++) {
+      for (var k in pools[i]) if (same(pools[i][k]) === want) return true;
+    }
+    for (var id in (d.custom || {})) if (same(d.custom[id].value) === want) return true;
+    return false;
   }
 
   /* ---------- dummy data ---------- */
@@ -247,6 +267,6 @@ var SF = (function () {
     load: load, save: save, normalize: normalize, defaults: defaults,
     siteKey: siteKey, cleanSite: cleanSite, validSite: validSite, ignoredBy: ignoredBy,
     clean: clean, tokens: tokens, labelText: labelText, eligible: eligible, isSensitive: isSensitive, classify: classify, learnable: learnable,
-    findCustom: findCustom, value: value, customValue: customValue, makeDummy: makeDummy, formatDate: formatDate
+    findCustom: findCustom, known: known, value: value, customValue: customValue, makeDummy: makeDummy, formatDate: formatDate
   };
 })();
