@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.1
+
+- Snapfill no longer saves something it already knows. Typing your name, email or any other
+  saved value again does nothing: no new entry, no "Remembered" message.
+- Nothing saved is ever replaced by what you type. A field kept to Work stays as it is when you
+  type a different value in Personal; the new value is kept to Personal on its own.
+- Keeping a field to one profile no longer replaces the copy kept to the other profile.
+
 ## 1.1.0
 
 - A new **Ignored** tab in the toolbar popup lists every site Snapfill stays away from.
